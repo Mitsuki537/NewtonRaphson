@@ -324,35 +324,35 @@ class NewtonRaphsonApp:
         
         for i, X in enumerate(history):
             if i == 0:
-                error_x = 0.0
-                error_y = 0.0
-            else:
+                # Primera iteración (valores iniciales) - no hay error
+                error_x = "-"
+                error_y = "-"
+            elif i == 1:
+             # Primera iteración (valores iniciales) - no hay error
+                error_x = "-"
+                error_y = "-"
+            elif i == 2:
+            # Segunda iteración - comparar con la inicial
                 error_x = abs((X[0] - history[i-1][0]) / abs(X[0])) * 100 if X[0] != 0 else 0
                 error_y = abs((X[1] - history[i-1][1]) / abs(X[1])) * 100 if X[1] != 0 else 0
+            else:
+             # Iteraciones posteriores
+             error_x = abs((X[0] - history[i-1][0]) / abs(X[0])) * 100 if X[0] != 0 else 0
+             error_y = abs((X[1] - history[i-1][1]) / abs(X[1])) * 100 if X[1] != 0 else 0
+            
+            # Formatear los valores para mostrar
+            x_val = f"{X[0]:.6f}"
+            y_val = f"{X[1]:.6f}"
+            error_x_str = f"{error_x:.4f}%" if isinstance(error_x, float) else error_x
+            error_y_str = f"{error_y:.4f}%" if isinstance(error_y, float) else error_y
             
             self.tree.insert("", "end", values=(
                 i,
-                f"{X[0]:.6f}",
-                f"{X[1]:.6f}",
-                f"{error_x:.4f}",
-                f"{error_y:.4f}"
+                x_val,
+                y_val,
+                error_x_str,
+                error_y_str
             ))
-    
-    def save_current(self):
-        """Guarda el ejercicio actual en el historial"""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-        entry = {
-            'timestamp': timestamp,
-            'f1': self.f1_entry.get(),
-            'f2': self.f2_entry.get(),
-            'x0': self.x0_entry.get(),
-            'y0': self.y0_entry.get()
-        }
-        
-        self.history.append(entry)
-        self.save_history()
-        self.update_history_list()
-        messagebox.showinfo("Guardado", "Ejercicio guardado en historial")
     
     def load_selected(self):
         """Carga un ejercicio del historial"""
