@@ -387,8 +387,7 @@ class NewtonRaphsonApp:
         self.f2_entry.delete(0, tk.END)
         self.x0_entry.delete(0, tk.END)
         self.y0_entry.delete(0, tk.END)
-        self.x0_entry.insert(0, "1.0")
-        self.y0_entry.insert(0, "1.0")
+       
         
         # Limpiar resultados anteriores
         for item in self.tree.get_children():
