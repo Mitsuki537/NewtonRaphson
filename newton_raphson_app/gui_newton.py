@@ -409,10 +409,6 @@ class NewtonRaphson:
         graph_frame = ttk.Frame(parent, style='Modern.TFrame', padding=10)
         graph_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Título
-        ttk.Label(graph_frame, text="Gráfica de la función", 
-                 font=('Segoe UI', 10, 'bold'), 
-                 foreground=self.colors['primary']).pack(anchor='w', pady=(0, 10))
         
         # Crear figura de matplotlib 
         try:
@@ -449,10 +445,7 @@ class NewtonRaphson:
         results_frame = ttk.Frame(parent, style='Modern.TFrame', padding=10)
         results_frame.pack(fill=tk.BOTH, pady=(15, 0))
         
-        # Título
-        ttk.Label(results_frame, text="Resultados del método", 
-                 font=('Segoe UI', 10, 'bold'), 
-                 foreground=self.colors['primary']).pack(anchor='w', pady=(0, 10))
+        
         
         # Crear Treeview con estilo 
         self.tree = ttk.Treeview(results_frame, 
