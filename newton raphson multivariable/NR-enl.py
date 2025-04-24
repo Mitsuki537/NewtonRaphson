@@ -381,6 +381,21 @@ class NewtonRaphsonApp:
         self.save_history()
         self.update_history_list()
     
+    def save_current(self):
+        """Guarda el ejercicio actual en el historial"""
+        entry = {
+            'f1': self.f1_entry.get(),
+            'f2': self.f2_entry.get(),
+            'x0': self.x0_entry.get(),
+            'y0': self.y0_entry.get(),
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        self.history.append(entry)
+        self.save_history()
+        self.update_history_list()
+        messagebox.showinfo("Guardado", "Ejercicio guardado en el historial.")
+
+
     def clear_fields(self):
         """Limpia todos los campos de entrada"""
         self.f1_entry.delete(0, tk.END)
