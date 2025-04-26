@@ -416,7 +416,7 @@ class NewtonRaphson:
         except:
             plt.style.use('ggplot')
             
-        self.fig, self.ax = plt.subplots(figsize=(7, 5))
+        self.fig, self.ax = plt.subplots(figsize=(3, 3))
         self.fig.patch.set_facecolor(self.colors['panel'])
         self.ax.set_facecolor(self.colors['panel'])
         
