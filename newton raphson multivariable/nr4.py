@@ -11,7 +11,7 @@ import os
 class NewtonRaphson4D:
     def __init__(self, root):
         self.root = root
-        self.root.title("Newton-Raphson 4D con Error por Variable")
+        self.root.title("Newton-Raphson 4D")
         self.root.geometry("1500x850")
         
         # Variables del sistema
