@@ -281,7 +281,7 @@ class NewtonRaphson4D:
                 
                 # Mostrar iteración en la tabla
                 values = [iteration+1] + [f"{val:.6f}" for val in current] 
-                values += [f"{err:.2e}" for err in errors] + [f"{error_total:.2e}"]
+                values += [f"{err:.6f}" for err in errors] + [f"{error_total:.6f}"]   
                 self.tree.insert("", "end", values=values)
                 
                 # Verificar convergencia (todas las variables deben cumplir la tolerancia)
