@@ -131,7 +131,7 @@ class NewtonRaphson4D:
         
         for i in range(4):
             ttk.Label(eq_frame, text=f"f{i+1}(x,y,z,w) =").grid(row=i, column=0, sticky='e', pady=2)
-            entry = ttk.Entry(eq_frame, textvariable=self.equations[i], width=35)
+            entry = ttk.Entry(eq_frame, textvariable=self.equations[i], width=28)
             entry.grid(row=i, column=1, pady=2)
             if i == 0:
                 entry.focus_set()
@@ -167,7 +167,7 @@ class NewtonRaphson4D:
         
         # Configurar estilo
         style = ttk.Style()
-        style.configure('Accent.TButton', foreground='white', background='#4e73df', font=('Segoe UI', 10, 'bold'))
+        style.configure('Accent.TButton', foreground='black', background='#4e73df', font=('Segoe UI', 10, 'bold'))
         
         # Tabla de resultados con errores individuales
         columns = [
