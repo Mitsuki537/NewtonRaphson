@@ -1,10 +1,12 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import numpy as np
+import json
 from sympy import symbols, sympify, diff, Matrix, lambdify
 from sympy.parsing.sympy_parser import (standard_transformations, 
                                       implicit_multiplication, 
                                       convert_xor)
+import os
 
 class NewtonRaphsonSystemSolver:
     def __init__(self, root):
@@ -21,7 +23,103 @@ class NewtonRaphsonSystemSolver:
         
         # Interfaz gráfica
         self.setup_ui()
+        self.setup_menu()
     
+    def setup_menu(self):
+        """Configura el menú superior para guardar/cargar archivos"""
+        menubar = tk.Menu(self.root)
+        
+        file_menu = tk.Menu(menubar, tearoff=0)
+        file_menu.add_command(label="Nuevo", command=self.new_file)
+        file_menu.add_command(label="Abrir", command=self.open_file)
+        file_menu.add_command(label="Guardar", command=self.save_file)
+        file_menu.add_command(label="Guardar como...", command=self.save_as_file)
+        file_menu.add_separator()
+        file_menu.add_command(label="Salir", command=self.root.quit)
+        
+        menubar.add_cascade(label="Archivo", menu=file_menu)
+        self.root.config(menu=menubar)
+    
+    def new_file(self):
+        """Limpia todos los campos para un nuevo archivo"""
+        for eq in self.equations:
+            eq.set("")
+        for var in self.vars:
+            self.initial_values[var].set(1.0)
+        self.error_tolerance.set(0.0001)
+        self.max_iterations.set(50)
+        self.tree.delete(*self.tree.get_children())
+        self.message_var.set("")
+        self.current_file = None
+    
+    def open_file(self):
+        """Abre un archivo JSON con configuración guardada"""
+        filepath = filedialog.askopenfilename(
+            defaultextension=".json",
+            filetypes=[("Archivos JSON", "*.json"), ("Todos los archivos", "*.*")]
+        )
+        if not filepath:
+             return
+             
+        try:
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+                
+                # Cargar ecuaciones
+                for i, eq in enumerate(data.get('equations', [])):
+                    self.equations[i].set(eq)
+                
+                # Cargar valores iniciales
+                for var in self.vars:
+                    self.initial_values[var].set(data['initial_values'].get(var, 1.0))
+                
+                # Cargar parámetros
+                self.error_tolerance.set(data.get('tolerance', 0.0001))
+                self.max_iterations.set(data.get('max_iterations', 50))
+                
+                self.current_file = filepath
+                self.message_var.set(f"Archivo cargado: {os.path.basename(filepath)}")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo cargar el archivo:\n{str(e)}")
+    
+    def save_file(self):
+        """Guarda la configuración actual en el archivo actual o abre diálogo si no hay uno"""
+        if self.current_file:
+            self._save_to_file(self.current_file)
+        else:
+            self.save_as_file()
+    
+    def save_as_file(self):
+        """Guarda la configuración actual en un nuevo archivo"""
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("Archivos JSON", "*.json"), ("Todos los archivos", "*.*")]
+        )
+        if not filepath:
+            return
+            
+        self._save_to_file(filepath)
+        self.current_file = filepath
+    
+    def _save_to_file(self, filepath):
+        """Guarda los datos actuales en el archivo especificado"""
+        try:
+            data = {
+                'equations': [eq.get() for eq in self.equations],
+                'initial_values': {var: val.get() for var, val in self.initial_values.items()},
+                'tolerance': self.error_tolerance.get(),
+                'max_iterations': self.max_iterations.get()
+            }
+            
+            with open(filepath, 'w') as f:
+                json.dump(data, f, indent=4)
+                
+            self.message_var.set(f"Archivo guardado: {os.path.basename(filepath)}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo guardar el archivo:\n{str(e)}")
+    
+
     def setup_ui(self):
         """Configura todos los componentes de la interfaz"""
         main_frame = ttk.Frame(self.root)
@@ -33,7 +131,7 @@ class NewtonRaphsonSystemSolver:
         
         for i in range(5):
             ttk.Label(eq_frame, text=f"f{i+1}(x,y,z,w,r) =").grid(row=i, column=0, sticky='e', pady=2)
-            ttk.Entry(eq_frame, textvariable=self.equations[i], width=35).grid(row=i, column=1, pady=2)
+            ttk.Entry(eq_frame, textvariable=self.equations[i], width=28).grid(row=i, column=1, pady=2)
         
         # Panel de control
         control_frame = ttk.LabelFrame(main_frame, text="Parámetros", padding=10)
@@ -52,9 +150,11 @@ class NewtonRaphsonSystemSolver:
         ttk.Label(control_frame, text="Máx. Iteraciones:").grid(row=7, column=0, sticky='e')
         ttk.Entry(control_frame, textvariable=self.max_iterations, width=12).grid(row=7, column=1)
         
-        # Botón de ejecución
+        # Botones de acción
         ttk.Button(control_frame, text="Resolver Sistema", 
-                 command=self.solve_system).grid(row=8, column=0, columnspan=2, pady=15)
+                 command=self.solve_system,
+                 style='Accent.TButton').grid(row=9, column=0, columnspan=2, pady=5)
+         
         
         # Panel de resultados
         results_frame = ttk.LabelFrame(main_frame, text="Resultados por Iteración", padding=10)
@@ -63,6 +163,21 @@ class NewtonRaphsonSystemSolver:
         # Tabla de resultados
         columns = [('iter', 'Iteración', 70)] + [(var, var, 90) for var in self.vars] + [('error', 'Error', 90)]
         self.tree = ttk.Treeview(results_frame, columns=[col[0] for col in columns], show='headings')
+        
+        # Tabla de resultados con errores individuales
+        columns = [
+        ('iter', 'Iteración', 70),
+        ('x', 'x', 90), ('y', 'y', 90),
+        ('z', 'z', 90), ('w', 'w', 90),
+        ('error_x', 'Error X', 100),  # Aumentado ancho para decimales
+        ('error_y', 'Error Y', 100),
+        ('error_z', 'Error Z', 100),
+        ('error_w', 'Error W', 100),
+        ('error_r', 'Error R', 100),
+        ('error_total', 'Error Total', 110)
+    ]
+
+        self.tree = ttk.Treeview(results_frame, columns=[col[0] for col in columns], show='headings', height=18)
         
         for col_id, heading, width in columns:
             self.tree.heading(col_id, text=heading)
@@ -146,14 +261,16 @@ class NewtonRaphsonSystemSolver:
                 
                 # Actualizar solución
                 new = current + delta
-                error = np.linalg.norm(delta) / np.linalg.norm(new)
-                
+                errors = np.abs(delta / (new + 1e-15))  # Evitar división por cero
+                error_total = np.linalg.norm(delta) / np.linalg.norm(new)
+
                 # Mostrar iteración
-                values = [iteration+1] + [f"{val:.6f}" for val in current] + [f"{error:.2e}"]
+                values = [iteration+1] + [f"{val:.6f}" for val in current] 
+                values += [f"{err:.6f}" for err in errors] + [f"{error_total:.6f}"]  # Cambiado a formato decimal
                 self.tree.insert("", "end", values=values)
                 
                 # Verificar convergencia
-                if error < tol:
+                if all(err < tol for err in errors):
                     converged = True
                     break
                     
@@ -161,12 +278,12 @@ class NewtonRaphsonSystemSolver:
             
             # Resultado final
             if converged:
-                self.message_var.set(f"Convergencia en {iteration+1} iteraciones (Error={error:.2e})")
+               self.message_var.set(f"¡Convergencia alcanzada en {iteration+1} iteraciones!")
             else:
-                self.message_var.set(f"Máximo de iteraciones alcanzado (Error={error:.2e})")
+                self.message_var.set(f"Advertencia: Máximo de iteraciones alcanzado (Error total={error_total:.2e})")
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Error en el cálculo:\n{str(e)}")
+            messagebox.showerror("Error", f"No se pudo resolver el sistema:\n{str(e)}")
             self.message_var.set(f"Error: {str(e)}")
 
 # Ejecución principal
