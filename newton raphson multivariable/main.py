@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 import tkinter as tk
 from tkinter import messagebox
 import subprocess
@@ -17,8 +15,8 @@ def ejecutar_script(opcion):
     archivo = scripts.get(opcion)
     if archivo:
         try:
-            subprocess.run(["python", archivo], check=True)
-        except subprocess.CalledProcessError as e:
+            subprocess.Popen(["python", archivo], shell=True)
+        except Exception as e:
             messagebox.showerror("Error", f"Ocurrió un error al ejecutar {archivo}:\n{e}")
     else:
         messagebox.showwarning("Advertencia", "Por favor selecciona una opción válida.")
